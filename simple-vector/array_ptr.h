@@ -41,8 +41,7 @@ public:
         if (this == &rhs) {
             return *this;
         }
-        raw_ptr_ = rhs.raw_ptr_;
-        rhs.raw_ptr_ = nullptr;
+        std::swap(raw_ptr_, rhs.raw_ptr_);
         return *this;
     }
 
@@ -66,8 +65,7 @@ public:
 
     // Возвращает true, если указатель ненулевой, и false в противном случае
     explicit operator bool() const {
-        if (raw_ptr_ != nullptr) { return true; }
-        return false;
+        return raw_ptr_ != nullptr;
     }
 
     // Возвращает значение сырого указателя, хранящего адрес начала массива
@@ -77,9 +75,7 @@ public:
 
     // Обменивается значениям указателя на массив с объектом other
     void swap(ArrayPtr& other) noexcept {
-        Type* temple_raw_ptr = raw_ptr_;
-        raw_ptr_ = other.raw_ptr_;
-        other.raw_ptr_ = temple_raw_ptr;
+        std::swap(raw_ptr_, other.raw_ptr_);
     }
 
 private:

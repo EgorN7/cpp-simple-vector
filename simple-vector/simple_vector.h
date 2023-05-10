@@ -38,9 +38,7 @@ public:
     SimpleVector() noexcept = default;
 
     SimpleVector(ReserveProxyObj obj) {
-        SimpleVector<Type> vec;
-        vec.Reserve(obj.GetSize());
-        swap(vec);
+        Reserve(obj.GetSize());
     }
 
     // Создаёт вектор из size элементов, инициализированных значением по умолчанию
@@ -92,8 +90,7 @@ public:
 
     SimpleVector& operator=(SimpleVector&& rhs) {
         if (this != &rhs) {
-            SimpleVector swap_vector(rhs);
-            swap(swap_vector);
+            swap(rhs);
         }
         return *this;
     }
@@ -115,13 +112,13 @@ public:
 
     // Возвращает ссылку на элемент с индексом index
     Type& operator[](size_t index) noexcept {
-        assert(index <= capacity_);
+        assert(index < size_);
         return items_[index];
     }
 
     // Возвращает константную ссылку на элемент с индексом index
     const Type& operator[](size_t index) const noexcept {
-        assert(index <= capacity_);
+        assert(index < size_);
         return items_[index];
     }
 
@@ -149,7 +146,7 @@ public:
     void Resize(size_t new_size) {
         if (new_size == size_) return;
         if (new_size < capacity_) {
-            for (size_t i = size_ - 1; i < new_size; ++i) {
+            for (size_t i = size_; i < new_size; ++i) { // если new_size <= size_ то сразу не выполниться условия и не произайдёт ни 1 итеррации цикла даже в случае когда новый размер равен 0
                 items_[i] = std::move(Type{});
             }
         }
@@ -174,7 +171,7 @@ public:
     // Возвращает итератор на элемент, следующий за последним
     // Для пустого массива может быть равен (или не равен) nullptr
     Iterator end() noexcept {
-        return Iterator{ &items_[size_] };
+        return Iterator{ items_.Get() + size_ };
     }
 
     // Возвращает константный итератор на начало массива
@@ -186,7 +183,7 @@ public:
     // Возвращает итератор на элемент, следующий за последним
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator end() const noexcept {
-        return ConstIterator{ &items_[size_] };
+        return ConstIterator{ items_.Get() + size_ };
     }
 
     // Возвращает константный итератор на начало массива
@@ -198,7 +195,7 @@ public:
     // Возвращает итератор на элемент, следующий за последним
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator cend() const noexcept {
-        return ConstIterator{ &items_[size_] };
+        return ConstIterator{ items_.Get() + size_ };
     }
 
     // Добавляет элемент в конец вектора
@@ -306,7 +303,7 @@ public:
     void Reserve(size_t new_capacity) {
         if (new_capacity > capacity_) {
             SimpleVector<Type> tmp_items(new_capacity);
-            std::copy(cbegin(), cend(), tmp_items.begin());
+            std::move(begin(), end(), tmp_items.begin());
             tmp_items.size_ = size_;
             swap(tmp_items);
         }
